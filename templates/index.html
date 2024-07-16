@@ -3,41 +3,87 @@
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>Hello World</title>
+    <title>Chat Box</title>
     <style>
         body {
             font-family: Arial, sans-serif;
+            margin: 20px;
         }
-        .slider {
-            width: 300px;
+        .chat-box {
+            max-width: 600px;
+            margin: 0 auto;
         }
-        .color-text {
-            font-size: 2em;
+        .messages {
+            border: 1px solid #ccc;
+            padding: 10px;
+            height: 300px;
+            overflow-y: scroll;
+            margin-bottom: 10px;
+        }
+        .message {
+            margin-bottom: 10px;
+        }
+        .message.user {
+            text-align: right;
+            color: blue;
+        }
+        .message.bot {
+            text-align: left;
+            color: green;
+        }
+        .input-box {
+            display: flex;
+        }
+        .input-box input {
+            flex: 1;
+            padding: 10px;
+            font-size: 1em;
+        }
+        .input-box button {
+            padding: 10px;
+            font-size: 1em;
         }
     </style>
 </head>
 <body>
-    <h1 class="color-text" id="colorText">Hello, World!</h1>
-    <input type="range" min="0" max="255" class="slider" id="redSlider">
-    <input type="range" min="0" max="255" class="slider" id="greenSlider">
-    <input type="range" min="0" max="255" class="slider" id="blueSlider">
+    <div class="chat-box">
+        <div class="messages" id="messages"></div>
+        <div class="input-box">
+            <input type="text" id="messageInput" placeholder="Type your message...">
+            <button onclick="sendMessage()">Send</button>
+        </div>
+    </div>
 
     <script>
-        const redSlider = document.getElementById('redSlider');
-        const greenSlider = document.getElementById('greenSlider');
-        const blueSlider = document.getElementById('blueSlider');
-        const colorText = document.getElementById('colorText');
+        function sendMessage() {
+            const messageInput = document.getElementById('messageInput');
+            const message = messageInput.value;
 
-        function updateColor() {
-            const r = redSlider.value;
-            const g = greenSlider.value;
-            const b = blueSlider.value;
-            colorText.style.color = `rgb(${r}, ${g}, ${b})`;
+            if (message.trim() === '') return;
+
+            const messagesDiv = document.getElementById('messages');
+            messagesDiv.innerHTML += `<div class="message user">${message}</div>`;
+            messageInput.value = '';
+
+            fetch('/chat', {
+                method: 'POST',
+                headers: {
+                    'Content-Type': 'application/json',
+                },
+                body: JSON.stringify({ message: message }),
+            })
+            .then(response => response.json())
+            .then(data => {
+                messagesDiv.innerHTML += `<div class="message bot">${data.response}</div>`;
+                messagesDiv.scrollTop = messagesDiv.scrollHeight;
+            });
         }
 
-        redSlider.addEventListener('input', updateColor);
-        greenSlider.addEventListener('input', updateColor);
-        blueSlider.addEventListener('input', updateColor);
+        document.getElementById('messageInput').addEventListener('keydown', function(e) {
+            if (e.key === 'Enter') {
+                sendMessage();
+            }
+        });
     </script>
 </body>
 </html>
